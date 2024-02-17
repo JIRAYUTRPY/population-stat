@@ -27,8 +27,9 @@ function App() {
   const [currentYear, setCurrentYear] = useState(2021);
   const [loading, setLoading] = useState(true);
   const [chartComponent, setChartComponent] = useState([]);
+  const [cachData, setCachData] = useState([]);
   const [play, setPlay] = useState(false);
-
+  const [total, setTotal] = useState(0);
   const handleAddToggle = (value) => () => {
     checked.push(value);
     clearInterval(interval);
@@ -50,6 +51,11 @@ function App() {
   const setNewYear = (e) => {
     const newYear = e.target.value;
     setCurrentYear(newYear);
+    let totalPop = 0;
+    cachData
+      .filter((value) => value.years === currentYear)
+      .map((value) => (totalPop = totalPop + value.population_overall));
+    setTotal(totalPop);
     clearInterval(interval);
     interval = null;
     if (play) {
@@ -70,6 +76,11 @@ function App() {
             clearInterval(interval);
             interval = null;
           }
+          let totalPop = 0;
+          cachData
+            .filter((value) => value.years === yearCount)
+            .map((value) => (totalPop = totalPop + value.population_overall));
+          setTotal(totalPop);
         }, 100);
       }
       const newPlay = !play;
@@ -77,6 +88,11 @@ function App() {
     } else {
       clearInterval(interval);
       interval = null;
+      let totalPop = 0;
+      cachData
+        .filter((value) => value.years === currentYear)
+        .map((value) => (totalPop = totalPop + value.population_overall));
+      setTotal(totalPop);
       const newPlay = !play;
       setPlay(newPlay);
     }
@@ -102,6 +118,7 @@ function App() {
       .select("*")
       .in("country_name", checked);
     setChartComponent([]);
+    setCachData(data);
     let newChartComponent = [];
     for (let x = 1950; x <= 2021; x++) {
       const dataMaping = checked.map((ct) =>
@@ -110,6 +127,7 @@ function App() {
       const dataFilter = dataMaping.map((dt) =>
         dt.filter((internal) => internal.years === x)
       );
+
       newChartComponent = [
         ...newChartComponent,
         {
@@ -137,6 +155,10 @@ function App() {
           ),
         },
       ];
+      let totalPop = 0;
+      const tt = dataFilter.map((value) => value[0].population_overall);
+      tt.map((value) => (totalPop = totalPop + value));
+      setTotal(totalPop);
     }
     setChartComponent(newChartComponent);
     setLoading(false);
@@ -147,7 +169,12 @@ function App() {
   }, []);
   return (
     <div className="w-screen h-screen flex justify-center bg-gray-400">
-      <div className="flex flex-col w-[90%] py-[2%] gap-3">
+      <div className="flex flex-col w-[90%] pt-[2%] gap-3">
+        <div className="w-full">
+          <h1 className="text-2xl">
+            Population growth per country, 1950 to 2021
+          </h1>
+        </div>
         <div className="w-full bg-white rounded-md h-[10%] p-5 flex items-center">
           <div className="pr-5">
             <TextField
@@ -170,6 +197,10 @@ function App() {
               valueLabelDisplay="on"
             />
           </div>
+          <h1 className="w-[12%]">
+            Population Total:{" "}
+            <span className="text-2xl font-bold">{total}</span>
+          </h1>
         </div>
         <div className="flex flex-row w-full h-[80%] gap-5">
           <div className="overflow-y-scroll min-w-[300px] w-[20%] overflow-x-hidden bg-white rounded-md hidescroll">
@@ -250,7 +281,7 @@ function App() {
                 })}
             </List>
           </div>
-          <div className="w-full h-full bg-white rounded-md flex justify-center items-center p-3">
+          <div className="w-full h-full bg-white rounded-md flex flex-col justify-center items-center p-3">
             {loading ? (
               <CircularProgress />
             ) : (
@@ -259,7 +290,7 @@ function App() {
                   <div
                     className={
                       chartCompoentData.year === currentYear
-                        ? "flex w-full h-full"
+                        ? "flex w-full"
                         : "hidden"
                     }
                   >
